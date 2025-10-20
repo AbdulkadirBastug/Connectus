@@ -1,0 +1,34 @@
+{
+  "name": "vpn",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron --no-deprecation .",
+    "build": "electron-builder"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "electron": "^38.3.0",
+    "electron-builder": "^26.0.12"
+  },
+  "dependencies": {
+    "sudo-prompt": "^9.2.1"
+  },
+  "build": {
+    "appId": "com.yourname.connectus",
+    "productName": "Connectus",
+    "files": [
+      "**/*",
+      "!node_modules/electron-builder",
+      "!node_modules/electron-builder/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.png"
+    }
+  }
+}

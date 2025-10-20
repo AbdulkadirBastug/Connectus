@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Connectus</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#1173d4",
+              "background-light": "#f6f7f8",
+              "background-dark": "#101922",
+            },
+            fontFamily: {
+              "display": ["Space Grotesk"]
+            },
+            borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-gray-800 dark:text-gray-200">
+<div class="flex flex-col min-h-screen">
+<header class="flex items-center justify-between p-4 border-b border-gray-200/10 dark:border-gray-700/50">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-3xl">shield</span>
+<h1 class="text-xl font-bold text-gray-900 dark:text-white">VPN</h1>
+</div>
+<div class="flex items-center gap-4">
+
+</div>
+</header>
+<main class="flex-grow flex flex-col items-center justify-center text-center p-4 @container">
+<div class="w-full max-w-md mx-auto">
+<div class="mb-8 @[400px]:mb-12">
+<div class="relative w-40 h-40 @[400px]:w-48 @[400px]:h-48 mx-auto flex items-center justify-center">
+<div class="absolute inset-0 bg-primary/10 dark:bg-primary/20 rounded-full animate-ping"></div>
+<div class="absolute inset-2 bg-primary/20 dark:bg-primary/30 rounded-full animate-ping delay-200"></div>
+<button id="connect-btn" class="relative z-10 w-32 h-32 @[400px]:w-40 @[400px]:h-40 bg-primary rounded-full flex flex-col items-center justify-center text-white shadow-lg shadow-primary/30 hover:scale-105 transition-transform duration-300">
+<span class="material-symbols-outlined text-4xl @[400px]:text-5xl">power_settings_new</span>
+<span id="connect-btn-text" class="text-base @[400px]:text-lg font-bold mt-1">Connect</span>
+</button>
+</div>
+</div>
+<div class="space-y-2">
+<h2 id="status-text" class="text-xl @[400px]:text-2xl font-bold text-gray-900 dark:text-white">You are disconnected</h2>
+<p id="status-subtitle" class="text-sm @[400px]:text-base text-gray-500 dark:text-gray-400 max-w-xs @[400px]:max-w-none mx-auto">Your connection is not secure. Connect to a server to protect your privacy.</p>
+</div>
+
+<div class="relative w-full max-w-sm mx-auto">
+    <button id="server-selector-btn" class="mt-8 @[400px]:mt-10 flex items-center justify-between w-full p-3 rounded-lg bg-background-light dark:bg-background-dark border border-gray-200/50 dark:border-gray-700/50">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-gray-500 dark:text-gray-400">public</span>
+            <p class="text-gray-700 dark:text-gray-300 text-sm @[400px]:text-base">Server:</p>
+            <span id="selected-server-name" class="font-bold text-gray-900 dark:text-white text-sm @[400px]:text-base ml-2">Loading...</span>
+        </div>
+        <span class="material-symbols-outlined text-primary">expand_more</span>
+    </button>
+    <div id="server-list-dropdown" class="absolute bottom-full left-0 right-0 mb-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg hidden">
+       
+    </div>
+</div>
+</div>
+</main>
+</div>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // --- STATE ---
+    let serverList = [];
+    let selectedServer = null;
+
+    // --- UI ELEMENTS ---
+    const connectBtn = document.getElementById('connect-btn');
+    const connectBtnText = document.getElementById('connect-btn-text');
+    const statusText = document.getElementById('status-text');
+    const statusSubtitle = document.getElementById('status-subtitle');
+    const serverSelectorBtn = document.getElementById('server-selector-btn');
+    const selectedServerName = document.getElementById('selected-server-name');
+    const serverListDropdown = document.getElementById('server-list-dropdown');
+
+    // --- EVENT LISTENERS ---
+
+    // Connect button
+    connectBtn.addEventListener('click', () => {
+      if (selectedServer) {
+        window.api.connect(selectedServer);
+      }
+    });
+
+    // Toggle server list dropdown
+    serverSelectorBtn.addEventListener('click', () => {
+      serverListDropdown.classList.toggle('hidden');
+    });
+
+    // --- API LISTENERS ---
+
+    // Handle VPN status changes from main process
+    window.api.onVPNStatusChanged(({ isConnected, message }) => {
+      statusText.textContent = message;
+      if (isConnected) {
+        connectBtnText.textContent = 'Disconnect';
+        connectBtn.classList.remove('bg-primary');
+        connectBtn.classList.add('bg-red-500');
+        statusSubtitle.textContent = 'Your connection is secure.';
+      } else {
+        connectBtnText.textContent = 'Connect';
+        connectBtn.classList.remove('bg-red-500');
+        connectBtn.classList.add('bg-primary');
+        statusSubtitle.textContent = 'Your connection is not secure. Connect to a server to protect your privacy.';
+      }
+    });
+
+    // Handle server list from main process
+    window.api.onServerList((servers) => {
+      serverList = servers;
+      serverListDropdown.innerHTML = ''; 
+
+      if (serverList && serverList.length > 0) {
+        // Set the first server as the default selected one
+        selectedServer = serverList[0];
+        selectedServerName.textContent = selectedServer.name;
+
+        // Create dropdown items
+        serverList.forEach(server => {
+          const item = document.createElement('div');
+          item.textContent = server.name;
+          item.className = 'server-item p-3 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer';
+          item.addEventListener('click', () => {
+            selectedServer = server;
+            selectedServerName.textContent = server.name;
+            serverListDropdown.classList.add('hidden');
+          });
+          serverListDropdown.appendChild(item);
+        });
+      } else {
+        selectedServerName.textContent = 'No servers found';
+      }
+    });
+  });
+</script>
+
+</body></html>
