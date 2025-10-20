@@ -3,6 +3,9 @@
 A custom, open-source desktop VPN client for Windows, built with Electron and designed to connect to a personal WireGuard server.
 
 
+<img width="953" height="681" alt="Screenshot" src="https://github.com/user-attachments/assets/f45a033e-3b09-4f94-8283-66ff6d1465ec" />
+
+
 ## Features
 
 *   **Modern User Interface:** A clean and simple UI built with Electron and styled with Tailwind CSS.
